@@ -1,0 +1,1 @@
+export const CLERK_URL='https://api.clerk.com/v1/users/me'

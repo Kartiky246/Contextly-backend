@@ -34,7 +34,7 @@ export class SessionController {
     }),
     )
     async createSession(@Req() req: ReqObj, @UploadedFiles() files: Express.Multer.File[], @Body() payload, @Res() res){
-        const userId = req?.user?.id!;
+        const userId = req?.user?.id! || '1';
 
         let parsedData: CreateSessionDto;
         try {
@@ -54,8 +54,8 @@ export class SessionController {
         throw new BadRequestException(formattedErrors);
         }
         
-        await this.sessionService.createSession(userId, parsedData, files)
-        return res.status(200).json({message: 'Session created successfully'})
+        const sessionId = await this.sessionService.createSession(userId, parsedData, files)
+        return res.status(200).json({message: 'Session created successfully', sessionId })
     }
 }
 

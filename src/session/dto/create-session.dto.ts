@@ -3,17 +3,11 @@ import { Type } from 'class-transformer';
 
 
 export enum Contexts{
-  DOCS = 'docs',
   YOUTUBE_LINKS = 'youtubeLinks',
   WEBSITE_LINKS = 'websiteLinks',
   MESSAGES = 'messages'
 }
 class ContextDto {
-  @IsArray()
-  @IsString({ each: true })
-  @IsOptional()
-  [Contexts.DOCS]?: string[];
-
   @IsArray()
   @IsString({ each: true })
   @IsOptional()

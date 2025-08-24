@@ -7,13 +7,9 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 import { QdrantVectorStore } from "@langchain/qdrant";
 import { ConfigService } from '@nestjs/config';
 import fs from "fs";
+import { FileExtensions } from '../cloudinary/cloudinary.service';
+import { FileTypes } from 'src/session/dto/create-session.dto';
 
-
-export enum FilType{
-    PDF_FILE= "PDF",
-    DOC_FILE = "DOCUMENT",
-    CSV_FILE = "CSV"
-}
 
 @Injectable()
 export class LangchainService {
@@ -22,16 +18,15 @@ export class LangchainService {
     uploadFileInQdrantStore = async (
     filePath: string,
     userId: string,
-    sessionId: string,
-    fileLink: string) => {
+    sessionId: string) => {
     let loader;
-    let docType: FilType;
-    if (filePath.endsWith(".pdf")) {
+    let docType: FileTypes;
+    if (filePath.endsWith(FileExtensions.PDF_FILE)) {
         loader = new PDFLoader(filePath);
-        docType = FilType.PDF_FILE;
-    } else if (filePath.endsWith(".docx")) {
+        docType = FileTypes.PDF_FILES;
+    } else if (filePath.endsWith(FileExtensions.DOC_FILE)) {
         loader = new DocxLoader(filePath);
-        docType = FilType.DOC_FILE;
+        docType = FileTypes.DOC_FILES;
     } else {
         throw new Error("Unsupported file type");
     }
@@ -49,21 +44,20 @@ export class LangchainService {
             ...doc.metadata,
             userId,
             sessionId,
-            docType,
-            fileLink,
+            docType
         },
     }));
 
-    const embeddings = new OpenAIEmbeddings({
-        model: "text-embedding-3-small",
-        apiKey: this.configService.get<string>('OPEN_AI_API_KEY')
-    });
+    // const embeddings = new OpenAIEmbeddings({
+    //     model: "text-embedding-3-small",
+    //     apiKey: this.configService.get<string>('OPEN_AI_API_KEY')
+    // });
 
-    const res = await QdrantVectorStore.fromDocuments(docsWithMetadata, embeddings, {
-        url: this.configService.get<string>("QDRANT_DB_URL"),
-        collectionName: "session",
-        apiKey: this.configService.get<string>("QDRANT_DB_API_KEY"),
-    });
+    // const res = await QdrantVectorStore.fromDocuments(docsWithMetadata, embeddings, {
+    //     url: this.configService.get<string>("QDRANT_DB_URL"),
+    //     collectionName: "session",
+    //     apiKey: this.configService.get<string>("QDRANT_DB_API_KEY"),
+    // });
 
     fs.unlinkSync(filePath);
 };

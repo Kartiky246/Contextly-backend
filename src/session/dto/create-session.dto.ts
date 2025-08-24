@@ -5,7 +5,13 @@ import { Type } from 'class-transformer';
 export enum Contexts{
   YOUTUBE_LINKS = 'youtubeLinks',
   WEBSITE_LINKS = 'websiteLinks',
-  MESSAGES = 'messages'
+  PDF_FILES = 'pdfFiles'
+}
+
+export enum FileTypes{
+  PDF_FILES = 'pdfFiles',
+  CSV_FILES = 'csvFiles',
+  DOC_FILES = 'docFiles' 
 }
 class ContextDto {
   @IsArray()
@@ -18,10 +24,11 @@ class ContextDto {
   @IsOptional()
   [Contexts.WEBSITE_LINKS]?: string[];
 
-  @IsArray()
+   @IsArray()
   @IsString({ each: true })
   @IsOptional()
-  [Contexts.MESSAGES]?: string[];
+  [Contexts.PDF_FILES]?: string[];
+
 }
 
 export class CreateSessionDto {

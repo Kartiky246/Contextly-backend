@@ -17,7 +17,7 @@ export class SessionController {
     // @UseGuards(ClerkAuthGuard )
     @Get('/all')
     async getAllSessions(@Req() req: ReqObj, @Res() res: Response){
-        const userId = req?.user?.id!;
+        const userId = req?.user?.id! || '1';
         const data = await this.sessionService.getAllSessions(userId);
         return res.status(200).json({sessons:data})
     }

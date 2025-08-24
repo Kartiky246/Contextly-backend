@@ -23,7 +23,6 @@ export class Session {
       pdfFiles: [],
       youtubeLinks: [],
       websiteLinks: [],
-      messages: [],
     },
   })
   context: {
@@ -32,7 +31,6 @@ export class Session {
     pdfFiles: string[];
     youtubeLinks: string[];
     websiteLinks: string[];
-    messages: string[];
   };
 }
 

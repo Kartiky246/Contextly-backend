@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-// import { QdrantService } from './qdrant.service';
+import { QdrantInitService } from './qdrant.service';
 
 @Module({
-  // providers: [QdrantService],
-  // exports: [QdrantService]
+  providers: [QdrantInitService],
+  exports: [QdrantInitService]
 })
 export class QdrantModule {}

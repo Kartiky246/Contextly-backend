@@ -34,7 +34,7 @@ export class SessionService {
                 f.fileType === FileTypes.PDF_FILES).map(v=>v.link);
 
             const newSession = new this.sessionModel({...data,userId});
-            const sessionData: SessionDocument = await newSession.save()
+            const sessionData: SessionDocument = (await newSession.save()).toObject();
             operations = [];
             for(let idx = 0; idx < cloudinaryFileLinks.length; idx++){
                 operations.push(this.langchainService.uploadFileInQdrantStore(`uploads/${files[idx].filename}`, userId, sessionData._id as string))

@@ -4,6 +4,7 @@ import { Document } from 'mongoose';
 
 export type SessionDocument = Session & Document;
 
+
 @Schema({ timestamps: true })
 export class Session {
   @Prop({ required: true })

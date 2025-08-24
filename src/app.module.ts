@@ -6,7 +6,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ChatModule } from './chat/chat.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { SessionModule } from './session/session.module';
-
+import { QdrantModule } from './qdrant/qdrant.module';
 
 @Module({
   imports: [
@@ -15,13 +15,12 @@ import { SessionModule } from './session/session.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        uri: config.get<string>('MONGO_DB_URI'),
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
+        uri: config.get<string>('MONGO_DB_URI')
       })}),
       StoreModule,
       ChatModule,
-      SessionModule
+      SessionModule,
+      QdrantModule,
   ],
   controllers: [AppController],
   providers: [AppService],

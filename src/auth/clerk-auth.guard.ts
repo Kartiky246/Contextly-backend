@@ -1,11 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import axios from 'axios';
-import { Request } from 'express';
+import { ReqObj } from 'src/common/types';
 import { CLERK_URL } from 'src/constant';
-
-export interface ReqObj extends Request {
-  user?: { id: string };
-}
 
 @Injectable()
 export class ClerkAuthGuard implements CanActivate {

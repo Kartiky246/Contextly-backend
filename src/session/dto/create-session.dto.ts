@@ -1,44 +1,38 @@
 import { IsString, IsOptional, IsBoolean, IsArray, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
+
+export enum Contexts{
+  DOCS = 'docs',
+  YOUTUBE_LINKS = 'youtubeLinks',
+  WEBSITE_LINKS = 'websiteLinks',
+  MESSAGES = 'messages'
+}
 class ContextDto {
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
-  docs?: string[];
+  [Contexts.DOCS]?: string[];
 
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
-  csvFiles?: string[];
+  [Contexts.YOUTUBE_LINKS]?: string[];
 
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
-  pdfFiles?: string[];
+  [Contexts.WEBSITE_LINKS]?: string[];
 
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
-  youtubeLinks?: string[];
-
-  @IsArray()
-  @IsString({ each: true })
-  @IsOptional()
-  websiteLinks?: string[];
-
-  @IsArray()
-  @IsString({ each: true })
-  @IsOptional()
-  messages?: string[];
+  [Contexts.MESSAGES]?: string[];
 }
 
 export class CreateSessionDto {
   @IsString()
   name: string;
-
-  @IsString()
-  userId: string;
 
   @IsBoolean()
   @IsOptional()
@@ -47,5 +41,5 @@ export class CreateSessionDto {
   @ValidateNested()
   @Type(() => ContextDto)
   @IsOptional()
-  context?: ContextDto;
+  context: ContextDto;
 }

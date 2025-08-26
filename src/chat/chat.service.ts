@@ -16,12 +16,17 @@ export class ChatService {
         return this.chatModel.find({ sessionId, userId  }).sort({ timeStamp: 1 }).exec()
     }
 
-    async sendMessage(sessionId: string, userId: string, message: string, onChunk: (chunk: string) => void){
+    async sendMessageToAi(sessionId: string, userId: string, message: string, onChunk: (chunk: string) => void){
         const chatHistory = await this.getChatHistory(sessionId, userId);
         const relevantInfo = await this.langchainService.getRelevantContent(message, sessionId, userId);
         const prompt = this.generatePrompt(message, relevantInfo, chatHistory)
         await streamAiResponse(this.openAiService.client, onChunk, OpenAiModel.GPT_4O_MINI, prompt as ChatCompletionMessageParam[] )
         
+    }
+
+    async saveAiMessageInDatabase(message: string, role: ChatRole, userId: string, sessionId: string){
+        const newChatDoc = new this.chatModel({role, content: message, userId, sessionId});
+        await newChatDoc.save();
     }
 
     generatePrompt(message: string, content: string [], chatHistory: chatMessages){

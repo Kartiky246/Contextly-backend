@@ -5,7 +5,7 @@ import { Document } from 'mongoose';
 export type ChatDocument = Chat & Document;
 
 export enum ChatRole{
-  ASSISTANT = 'assitant',
+  ASSISTANT = 'assistant',
   USER = 'user'
 }
 

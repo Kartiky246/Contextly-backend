@@ -3,6 +3,7 @@ import { CreateChatDto } from './dto/create-chat.dto';
 import type { ReqObj } from 'src/common/types';
 import { ChatService } from './chat.service';
 import type { Response } from 'express';
+import { ChatRole } from './chat.schema';
 
 @Controller('api/chat')
 export class ChatController {
@@ -13,9 +14,13 @@ export class ChatController {
         res.setHeader("Content-Type", "text/event-stream");
         res.setHeader("Cache-Control", "no-cache");
         const userId = req?.user?.id! || '1'
-        await this.chatService.sendMessage(payload.sessionId, userId, payload.message, (chunk)=>{
+        let chatResponse :string ='';
+        await this.chatService.sendMessageToAi(payload.sessionId, userId, payload.message, (chunk)=>{
             res.write(`data: ${chunk}\n\n`);
+            chatResponse +=chunk;
         })
+        await this.chatService.saveAiMessageInDatabase(payload.message, ChatRole.USER, userId, payload.sessionId);
+        await this.chatService.saveAiMessageInDatabase(chatResponse, ChatRole.ASSISTANT, userId, payload.sessionId);
         res.end();
     }
 }

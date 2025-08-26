@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req, Res } from '@nestjs/common';
 import { CreateChatDto } from './dto/create-chat.dto';
 import type { ReqObj } from 'src/common/types';
 import { ChatService } from './chat.service';
@@ -21,5 +21,12 @@ export class ChatController {
         })
         await this.chatService.saveAiMessageInDatabase([{content: payload.message, role: ChatRole.USER},{content: chatResponse, role: ChatRole.ASSISTANT}],userId, payload.sessionId);
         res.end();
+    }
+
+    @Get('/:sessionId')
+    async getAllChat(@Req() req: ReqObj, @Res() res: Response, @Param('sessionId') sessionId: string){
+        const userId= req?.user?.id || '1';
+        const chat = await this.chatService.getChatHistory(sessionId, userId )
+        res.status(200).json({chat});
     }
 }

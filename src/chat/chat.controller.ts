@@ -19,8 +19,7 @@ export class ChatController {
             res.write(`data: ${chunk}\n\n`);
             chatResponse +=chunk;
         })
-        await this.chatService.saveAiMessageInDatabase(payload.message, ChatRole.USER, userId, payload.sessionId);
-        await this.chatService.saveAiMessageInDatabase(chatResponse, ChatRole.ASSISTANT, userId, payload.sessionId);
+        await this.chatService.saveAiMessageInDatabase([{content: payload.message, role: ChatRole.USER},{content: chatResponse, role: ChatRole.ASSISTANT}],userId, payload.sessionId);
         res.end();
     }
 }

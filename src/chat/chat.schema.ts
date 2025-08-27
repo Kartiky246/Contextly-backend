@@ -27,3 +27,6 @@ export class Chat {
 }
 
 export const ChatSchema = SchemaFactory.createForClass(Chat);
+
+
+ChatSchema.index({ sessionId: 1, userId: 1 });

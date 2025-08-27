@@ -24,9 +24,9 @@ export class ChatController {
     }
 
     @Get('/:sessionId')
-    async getAllChat(@Req() req: ReqObj, @Res() res: Response, @Param('sessionId') sessionId: string){
+    async getAllChat(@Req() req: ReqObj, @Param('sessionId') sessionId: string){
         const userId= req?.user?.id || '1';
         const chat = await this.chatService.getChatHistory(sessionId, userId )
-        res.status(200).json({chat});
+        return {chat};
     }
 }

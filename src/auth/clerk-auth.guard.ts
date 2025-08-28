@@ -2,9 +2,11 @@ import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from
 import axios from 'axios';
 import { ReqObj } from 'src/common/types';
 import { CLERK_URL } from 'src/constant';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ClerkAuthGuard implements CanActivate {
+  constructor(private configService: ConfigService){}
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req: ReqObj = context.switchToHttp().getRequest();
     const authHeader = req.headers['authorization'];
@@ -20,6 +22,7 @@ export class ClerkAuthGuard implements CanActivate {
       const response = await axios.get(CLERK_URL, {
         headers: {
           Authorization: `Bearer ${token}`,
+          'Clerk-Secret-Key': this.configService.get<string>('CLERK_SECRET_KEY')
         }
       });
 

@@ -23,7 +23,7 @@ export class ClerkAuthGuard implements CanActivate {
       const verifiedToken = await verifyToken(token, {
         jwtKey: this.configService.get<string>('CLERK_JWT_KEY'),
         authorizedParties:[
-          'http://localhost:5173'
+          'https://contextly-frontend.vercel.app'
 
         ],
         secretKey: process.env.CLERK_SECRET_KEY 

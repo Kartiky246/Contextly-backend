@@ -41,6 +41,5 @@ export class CreateSessionDto {
 
   @ValidateNested()
   @Type(() => ContextDto)
-  @IsOptional()
   context: ContextDto;
 }

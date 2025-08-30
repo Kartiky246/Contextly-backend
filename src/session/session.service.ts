@@ -30,9 +30,10 @@ export class SessionService {
 
             // first upload the files on cloudinary
             const cloudinaryFileLinks = await Promise.all(operations);
-            data.context[Contexts.PDF_FILES] = cloudinaryFileLinks.filter((f: {fileType: FileTypes, link: string})=>
-                f.fileType === FileTypes.PDF_FILES).map(v=>v.link);
-
+            if(cloudinaryFileLinks.length){
+                data.context[Contexts.PDF_FILES] = cloudinaryFileLinks.filter((f: {fileType: FileTypes, link: string})=>
+                    f.fileType === FileTypes.PDF_FILES).map(v=>v.link);
+            }
             const sessionDoc = new this.sessionModel({...data,userId});
             const sessionData: SessionDocument = (await sessionDoc.save()).toObject();
             operations = [];
@@ -41,16 +42,16 @@ export class SessionService {
             }
             
             await Promise.all(operations);
-            await this.sessionModel.findByIdAndUpdate(
+            const res = await this.sessionModel.findByIdAndUpdate(
                         sessionData._id,
                         { $set: { isReadyToUse: true } },
                         { new: true }
                     )
                     
-            return sessionData._id;
+            return res?.toObject();
             
         } catch (error) {
-            throw new InternalServerErrorException({message: 'something went wrong'})
+            throw new InternalServerErrorException({message: 'something went wrong', error})
         }
 
     }

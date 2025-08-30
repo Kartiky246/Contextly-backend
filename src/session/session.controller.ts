@@ -14,16 +14,16 @@ import type { ReqObj } from 'src/common/types';
 export class SessionController {
     constructor(private readonly sessionService: SessionService) { }
 
-    // @UseGuards(ClerkAuthGuard )
+    @UseGuards(ClerkAuthGuard )
     @Get('/all')
-    async getAllSessions(@Req() req: ReqObj, @Res() res: Response) {
-        const userId = req?.user?.id! || '1';
-        const data = await this.sessionService.getAllSessions(userId);
-        return res.status(200).json({ sessons: data })
+    async getAllSessions(@Req() req: ReqObj, @Res() res) {
+        const userId = req?.user?.id!;
+        const data = await this.sessionService.getAllSessions(userId) || [];
+        return res.status(200).json({session: data})
     }
 
 
-    // @UseGuards(ClerkAuthGuard )
+    @UseGuards(ClerkAuthGuard )
     @Post('/create')
     @UseInterceptors(
         FilesInterceptor('files', 10, {
@@ -33,14 +33,14 @@ export class SessionController {
             }),
         }),
     )
-    async createSession(@Req() req: ReqObj, @UploadedFiles() files: Express.Multer.File[], @Body() payload, @Res() res) {
-        const userId = req?.user?.id! || '1';
+    async createSession(@Req() req: ReqObj, @UploadedFiles() files: Express.Multer.File[], @Body() payload) {
+        const userId = req?.user?.id!;
 
         let parsedData: CreateSessionDto;
         try {
             parsedData = JSON.parse(payload.data);
         } catch (err) {
-            throw new BadRequestException('Invalid JSON data');
+                throw new BadRequestException('Invalid JSON data');
         }
 
         const dto = plainToInstance(CreateSessionDto, parsedData);
@@ -54,8 +54,8 @@ export class SessionController {
             throw new BadRequestException(formattedErrors);
         }
 
-        const sessionId = await this.sessionService.createSession(userId, parsedData, files)
-        return res.status(200).json({ message: 'Session created successfully', sessionId })
+        const res = await this.sessionService.createSession(userId, parsedData, files)
+        return {...res}
     }
 }
 

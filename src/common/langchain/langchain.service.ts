@@ -76,7 +76,7 @@ export class LangchainService {
             }
         );
 
-        const result = await store.similaritySearch(message, 1, {
+        const result = await store.similaritySearch(message, 3, {
             must: [
                 {
                     key: "metadata.sessionId",
@@ -84,14 +84,23 @@ export class LangchainService {
                 },
                 {
                     key: "metadata.userId",
-                    match: {value: userId}
+                    match: { value: userId }
                 }
-               
+
             ]
         });
 
 
-        return result.map((v) => v.pageContent);
+        return result.reduce((acc, v) => {
+            let str = `${v.pageContent}\n`;
+            if(v?.metadata?.loc?.pageNumber && v?.metadata?.loc?.lines?.from){
+                str+= 'Content Source is : \n'
+                str += `Page Number: ${v?.metadata?.loc?.pageNumber}, `;
+                str += `Lines: ${v?.metadata?.loc?.lines?.from} to ${v?.metadata?.loc?.lines?.to}\n`;
+            }
+            return acc + str + "\n\n";
+          }, "");
+          
     };
 
 

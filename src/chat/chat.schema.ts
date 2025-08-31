@@ -6,7 +6,8 @@ export type ChatDocument = Chat & Document;
 
 export enum ChatRole{
   ASSISTANT = 'assistant',
-  USER = 'user'
+  USER = 'user',
+  SYSTEM = 'system'
 }
 
 export type chatMessages = {role: ChatRole, content: string} []; 

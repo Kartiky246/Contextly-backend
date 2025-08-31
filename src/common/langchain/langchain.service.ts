@@ -8,8 +8,9 @@ import { ConfigService } from '@nestjs/config';
 import fs from "fs";
 import { FileExtensions } from '../cloudinary/cloudinary.service';
 import { FileTypes } from 'src/session/dto/create-session.dto';
-import { OpenaiService } from '../openAi/openai/openai.service';
+import { OpenAiModel, OpenaiService } from '../openAi/openai/openai.service';
 import path from 'path';
+import { QdrantInitService } from 'src/qdrant/qdrant.service';
 
 
 interface Where {
@@ -19,7 +20,7 @@ interface Where {
 }
 @Injectable()
 export class LangchainService {
-    constructor(private readonly configService: ConfigService, private readonly openAiService: OpenaiService) { }
+    constructor(private readonly configService: ConfigService, private readonly openAiService: OpenaiService, private readonly qdrantService: QdrantInitService) { }
 
     uploadFileInQdrantStore = async (
         filePath: string,
@@ -53,7 +54,7 @@ export class LangchainService {
                 docType
             },
         }));
-
+        await this.qdrantService.onModuleInit();
         await QdrantVectorStore.fromDocuments(docsWithMetadata, this.openAiService.embedding, {
             url: this.configService.get<string>("QDRANT_DB_URL"),
             collectionName: "session",
@@ -63,11 +64,23 @@ export class LangchainService {
         fs.unlinkSync(filePath);
     };
 
-    getRelevantContent = async (
+    getContext = async (
         message: string,
         sessionId: string,
         userId: string
     ) => {
+        // check if the query is contextual or normal chit chat
+        const classification = await this.openAiService.client.chat.completions.create({
+            model: OpenAiModel.GPT_4O_MINI,
+            messages: [
+              { role: "system", content: "You are a classifier that labels user queries." },
+              { role: "user", content: `Classify this: "${message}". 
+               Reply only 'chitchat' or 'question'` }
+            ]
+          });
+        if(classification.choices[0].message?.content === "chitchat"){
+            return 
+        }
         const store = await QdrantVectorStore.fromExistingCollection(
             this.openAiService.embedding,
             {
@@ -90,7 +103,6 @@ export class LangchainService {
 
             ]
         });
-
 
         return result.reduce((acc, v) => {
             let str = `${v.pageContent}\n`;

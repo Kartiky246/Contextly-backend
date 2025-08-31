@@ -23,8 +23,8 @@ export class ChatService {
           
 
     async sendMessageToAi(sessionId: string, userId: string, message: string, onChunk: (type: ChunkType, chunk: string) => void) {
-        const preRequisteDataForChat = await Promise.all([this.getChatHistory(sessionId, userId), this.langchainService.getRelevantContent(message, sessionId, userId)])
-        const prompt = [this.systemPrompt, ...this.generatePrompt(message, preRequisteDataForChat[1], preRequisteDataForChat[0])];
+        const preRequisteDataForChat = await Promise.all([this.getChatHistory(sessionId, userId), this.langchainService.getContext(message, sessionId, userId)])
+        const prompt = [this.systemPrompt, ...this.generatePrompt(message, preRequisteDataForChat[0], preRequisteDataForChat[1])];
         await streamAiResponse(this.openAiService.client, onChunk, OpenAiModel.GPT_4O_MINI, prompt as ChatCompletionMessageParam[])
 
     }
@@ -33,7 +33,7 @@ export class ChatService {
         await this.chatModel.insertMany(messages.map(v => ({ ...v, sessionId, userId })));
     }
 
-    generatePrompt(message: string, content: string, chatHistory: chatMessages) {
+    generatePrompt(message: string, chatHistory: chatMessages, content?: string,) {
         const query =
             `${message}
             ${content ?

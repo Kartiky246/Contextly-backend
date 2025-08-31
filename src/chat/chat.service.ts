@@ -23,8 +23,10 @@ export class ChatService {
           
 
     async sendMessageToAi(sessionId: string, userId: string, message: string, onChunk: (type: ChunkType, chunk: string) => void) {
-        const preRequisteDataForChat = await Promise.all([this.getChatHistory(sessionId, userId), this.langchainService.getContext(message, sessionId, userId)])
-        const prompt = [this.systemPrompt, ...this.generatePrompt(message, preRequisteDataForChat[0], preRequisteDataForChat[1])];
+        const chatHistoryPromise = this.getChatHistory(sessionId, userId);
+        const context = await this.langchainService.getContext(message, sessionId, userId);
+        const history = await chatHistoryPromise;
+        const prompt = [this.systemPrompt, ...this.generatePrompt(message, history, context)];
         await streamAiResponse(this.openAiService.client, onChunk, OpenAiModel.GPT_4O_MINI, prompt as ChatCompletionMessageParam[])
 
     }

@@ -11,6 +11,7 @@ import { FileTypes } from 'src/session/dto/create-session.dto';
 import { OpenAiModel, OpenaiService } from '../openAi/openai/openai.service';
 import path from 'path';
 import { QdrantInitService } from 'src/qdrant/qdrant.service';
+import { ChatRole } from 'src/chat/chat.schema';
 
 
 interface Where {
@@ -73,8 +74,8 @@ export class LangchainService {
         const classification = await this.openAiService.client.chat.completions.create({
             model: OpenAiModel.GPT_4O_MINI,
             messages: [
-              { role: "system", content: "You are a classifier that labels user queries." },
-              { role: "user", content: `Classify this: "${message}". 
+              { role: ChatRole.SYSTEM, content: "You are a classifier that labels user queries." },
+              { role: ChatRole.USER, content: `Classify this: "${message}". 
                Reply only 'chitchat' or 'question'` }
             ]
           });

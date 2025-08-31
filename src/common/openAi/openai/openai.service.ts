@@ -19,7 +19,7 @@ export class OpenaiService {
         if (!this.openAiEmbeddings) {
             this.openAiEmbeddings = new OpenAIEmbeddings({
                 model: OpenAiModel.TEXT_EMBEDDING_3_SMALL,
-                apiKey: this.configService.get<string>('OPEN_AI_API_KEY')
+                apiKey: this.configService.get<string>('OPEN_AI_API_KEY')?.trim().replace(/[\r\n]/g, "")
             });
         }
         return this.openAiEmbeddings;
@@ -28,7 +28,7 @@ export class OpenaiService {
     get client(){
         if(!this.openAiInstance){
             this.openAiInstance = new OpenAI({
-                apiKey: this.configService.get<string>('OPEN_AI_API_KEY')
+                apiKey: this.configService.get<string>('OPEN_AI_API_KEY')?.trim().replace(/[\r\n]/g, "")
             })
         }
         return this.openAiInstance;

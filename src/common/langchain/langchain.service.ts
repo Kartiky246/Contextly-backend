@@ -12,7 +12,6 @@ import { OpenAiModel, OpenaiService } from '../openAi/openai/openai.service';
 import path from 'path';
 import { QdrantInitService } from 'src/qdrant/qdrant.service';
 import { ChatRole } from 'src/chat/chat.schema';
-import OpenAI from 'openai';
 
 
 interface Where {
@@ -72,12 +71,7 @@ export class LangchainService {
         userId: string
     ) => {
         // check if the query is contextual or normal chit chat
-        const client = new OpenAI({
-            apiKey: this.configService.get<string>('OPEN_AI_API_KEY')
-
-        })
-
-        const classification = await client.chat.completions.create({
+        const classification = await this.openAiService.client.chat.completions.create({
             model: OpenAiModel.GPT_4O_MINI,
             messages: [
               { role: ChatRole.SYSTEM, content: "You are a classifier that labels user queries." },

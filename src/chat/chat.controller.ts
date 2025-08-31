@@ -21,28 +21,28 @@ export class ChatController {
       res.setHeader("Content-Type", "text/event-stream")
       res.setHeader("Cache-Control", "no-cache")
       res.setHeader("Connection", "keep-alive")
-    
+
       const userId = req?.user?.id!
       let chatResponse = ""
-    
+
       await this.chatService.sendMessageToAi(
         payload.sessionId,
         userId,
         payload.message,
         (type, chunk) => {
+          res.write(`data: ${JSON.stringify({ type, value: chunk })}\n\n`)
+
           if (type === ChunkType.TEXT) {
-            res.write(`data: ${JSON.stringify({ type, value: chunk })}\n\n`)
             chatResponse += chunk
           }
-          if (type === ChunkType.LINK) {
-            res.write(`data: ${JSON.stringify({ type, value: chunk })}\n\n`)
-          }
-          if (type === ChunkType.SOURCE) {
-            res.write(`data: ${JSON.stringify({ type, value: chunk })}\n\n`)
+          if(type === ChunkType.LINK){
+            chatResponse+= '<linkStart>'
+            chatResponse+= chunk;
+            chatResponse+= '</linkEnd>'
           }
         }
       )
-    
+
       await this.chatService.saveAiMessageInDatabase(
         [
           { content: payload.message, role: ChatRole.USER },
@@ -51,7 +51,7 @@ export class ChatController {
         userId,
         payload.sessionId
       )
-    
+
       res.end()
     }
     

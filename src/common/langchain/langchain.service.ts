@@ -9,6 +9,7 @@ import fs from "fs";
 import { FileExtensions } from '../cloudinary/cloudinary.service';
 import { FileTypes } from 'src/session/dto/create-session.dto';
 import { OpenaiService } from '../openAi/openai/openai.service';
+import path from 'path';
 
 
 interface Where {
@@ -93,10 +94,12 @@ export class LangchainService {
 
         return result.reduce((acc, v) => {
             let str = `${v.pageContent}\n`;
-            if(v?.metadata?.loc?.pageNumber && v?.metadata?.loc?.lines?.from){
-                str+= 'Content Source is : \n'
-                str += `Page Number: ${v?.metadata?.loc?.pageNumber}, `;
-                str += `Lines: ${v?.metadata?.loc?.lines?.from} to ${v?.metadata?.loc?.lines?.to}\n`;
+            if (v?.metadata?.loc?.pageNumber && v?.metadata?.loc?.lines?.from && v?.metadata?.source) {
+              const fileName = path.basename(v.metadata.source);
+              str += "Content Source is:\n";
+              str += `Document: ${fileName}, `;
+              str += `Page Number: ${v.metadata.loc.pageNumber}, `;
+              str += `Lines: ${v.metadata.loc.lines.from} to ${v.metadata.loc.lines.to}\n`;
             }
             return acc + str + "\n\n";
           }, "");

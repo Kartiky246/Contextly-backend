@@ -15,12 +15,12 @@ export class ChatService {
 
     async getChatHistory(sessionId: string, userId: string) {
         return this.chatModel
-            .find({ sessionId, userId })
+            .find({ sessionId, userId }, { content: 1, role: 1, _id: 0 })
             .sort({ timeStamp: 1 })
             .lean()
-            .exec();
-    }
-
+            .exec()
+        }
+          
 
     async sendMessageToAi(sessionId: string, userId: string, message: string, onChunk: (type: ChunkType, chunk: string) => void) {
         const preRequisteDataForChat = await Promise.all([this.getChatHistory(sessionId, userId), this.langchainService.getRelevantContent(message, sessionId, userId)])

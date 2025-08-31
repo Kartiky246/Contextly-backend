@@ -1,12 +1,14 @@
-import OpenAI from "openai";
-import { ChatCompletionMessageParam } from "openai/resources/chat/completions";
+import OpenAI from "openai"
+import { ChatCompletionMessageParam } from "openai/resources/chat/completions"
 
-
-export enum ChunkType{
-  TEXT = 'text',
-  LINK = 'link',
-  SOURCE = 'socure'
+export enum ChunkType {
+  TEXT = "text",
+  LINK = "link",
+  SOURCE = "source",
 }
+
+const URL_VALID_CHARS = /^[a-zA-Z0-9:/?#@!$&'()*+,;=%._~-]+$/
+const TRAILING_PUNCTUATION = [")", "]", "}", ".", ",", "!", "?", "\"", "'"]
 
 export const streamAiResponse = async (
   openaiClient: OpenAI,
@@ -21,67 +23,71 @@ export const streamAiResponse = async (
   })
 
   let buffer = ""
-  let insideSource = false
-  let sourceBuffer = ""
-  let insideLink = false
   let linkBuffer = ""
+  let inLink = false
 
-  for await (const part of stream) {
-    const chunk = part.choices[0]?.delta?.content || ""
-    if (!chunk) continue
+  const flushLink = () => {
+    if (!linkBuffer) return
 
-    if (insideSource) {
-      sourceBuffer += chunk
-      if (sourceBuffer.includes("</sourceEnd>")) {
-        const value = sourceBuffer.replace(/<\/?source(Start|End)>/g, "")
-        onChunk(ChunkType.SOURCE, value.trim())
-        sourceBuffer = ""
-        insideSource = false
+    let cleanUrl = linkBuffer
+    let trailing = ""
+
+    while (
+      cleanUrl.length > 0 &&
+      TRAILING_PUNCTUATION.includes(cleanUrl.slice(-1))
+    ) {
+      trailing = cleanUrl.slice(-1) + trailing
+      cleanUrl = cleanUrl.slice(0, -1)
+    }
+
+    if (cleanUrl) {
+      onChunk(ChunkType.LINK, cleanUrl)
+    }
+    if (trailing) {
+      onChunk(ChunkType.TEXT, trailing)
+    }
+
+    linkBuffer = ""
+    inLink = false
+  }
+
+  for await (const chunk of stream) {
+    const token = chunk.choices[0]?.delta?.content || ""
+
+    if (inLink) {
+      if (URL_VALID_CHARS.test(token)) {
+        linkBuffer += token
+      } else {
+        flushLink()
+
+        if (token) onChunk(ChunkType.TEXT, token)
       }
-      continue
-    }
+    } else {
+      buffer += token
 
-    if (insideLink) {
-      linkBuffer += chunk
-      if (linkBuffer.includes("</LinkEnd>")) {
-        const value = linkBuffer.replace(/<\/?Link(Start|End)>/g, "")
-        onChunk(ChunkType.LINK, value.trim())
-        linkBuffer = ""
-        insideLink = false
+      const urlStart = buffer.search(/https?:\/\//)
+      if (urlStart !== -1) {
+        const before = buffer.slice(0, urlStart)
+        if (before) onChunk(ChunkType.TEXT, before)
+
+        linkBuffer = buffer.slice(urlStart)
+        buffer = ""
+        inLink = true
+      } else {
+        const lastSpace = buffer.lastIndexOf(" ")
+        if (lastSpace > -1) {
+          const flushed = buffer.slice(0, lastSpace + 1)
+          onChunk(ChunkType.TEXT, flushed)
+          buffer = buffer.slice(lastSpace + 1)
+        }
       }
-      continue
-    }
-
-    buffer += chunk
-
-    if (buffer.includes("<sourceStart>")) {
-      const before = buffer.slice(0, buffer.indexOf("<sourceStart>"))
-      if (before.trim()) onChunk(ChunkType.TEXT, before)
-      sourceBuffer = buffer.slice(buffer.indexOf("<sourceStart>"))
-      buffer = ""
-      insideSource = true
-      continue
-    }
-
-    if (buffer.includes("<LinkStart>")) {
-      const before = buffer.slice(0, buffer.indexOf("<LinkStart>"))
-      if (before.trim()) onChunk(ChunkType.TEXT, before)
-      linkBuffer = buffer.slice(buffer.indexOf("<LinkStart>"))
-      buffer = ""
-      insideLink = true
-      continue
-    }
-
-    const safeText = buffer.replace(/<[^>]*$/, "")
-    if (safeText) {
-      onChunk(ChunkType.TEXT, safeText)
-      buffer = buffer.slice(safeText.length)
     }
   }
 
-  if (buffer.trim()) onChunk(ChunkType.TEXT, buffer)
-
-  return buffer
+  if (inLink && linkBuffer) {
+    flushLink()
+  }
+  if (buffer.trim()) {
+    onChunk(ChunkType.TEXT, buffer)
+  }
 }
-
-

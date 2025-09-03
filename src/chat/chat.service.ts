@@ -30,7 +30,7 @@ export class ChatService {
     }
 
     async saveAiMessageInDatabase(messages: { content: string, role: ChatRole }[], userId: string, sessionId: string) {
-        await this.chatModel.insertMany(messages.map(v => ({ ...v, sessionId, userId })));
+        await this.chatModel.insertMany(messages.map((v,idx) => ({ ...v, sessionId, userId, createdAt: new Date(Date.now()+idx), updatedAt: new Date(Date.now()+idx) })));
     }
 
     generatePrompt(message: string, chatHistory: chatMessages, content?: string,) {

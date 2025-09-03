@@ -16,7 +16,7 @@ export class ChatService {
     async getChatHistory(sessionId: string, userId: string) {
         return this.chatModel
             .find({ sessionId, userId }, { content: 1, createdAt: 1, role: 1, _id: 0 })
-            .sort({ timeStamp: 1 })
+            .sort({ createdAt: -1 })
             .lean()
             .exec()
         }

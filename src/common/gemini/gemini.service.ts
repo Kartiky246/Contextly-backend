@@ -2,6 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenAI } from "@google/genai";
 
+export enum GeminiModel {
+    GEMINI_2_5_FLASH = "gemini-2.5-flash",
+    GEMINI_2_0_FLASH_001 = "gemini-2.0-flash",
+}
+
 @Injectable()
 export class GeminiService {
     geminiInstance!: GoogleGenAI;

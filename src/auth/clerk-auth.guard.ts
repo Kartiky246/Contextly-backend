@@ -1,6 +1,5 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ReqObj } from 'src/common/types';
-import { CLERK_URL } from 'src/constant';
 import { ConfigService } from '@nestjs/config';
 import { verifyToken } from '@clerk/backend';
 

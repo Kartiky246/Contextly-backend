@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@clerk/backend": "^2.10.1",
+    "@google/genai": "^1.19.0",
     "@langchain/community": "^0.3.53",
     "@langchain/core": "^0.3.72",
     "@langchain/openai": "^0.6.9",

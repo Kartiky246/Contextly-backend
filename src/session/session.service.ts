@@ -6,7 +6,7 @@ import { Contexts, CreateSessionDto, FileTypes } from './dto/create-session.dto'
 import { CloudinaryService } from 'src/common/cloudinary/cloudinary.service';
 import { LangchainService } from 'src/common/langchain/langchain.service';
 import { InternalServerErrorException } from '@nestjs/common';
-
+import { ScrapedContent, scrapeWebsite } from 'src/utils/web-scrapping/web-scrapping-cheerio';
 
 
 @Injectable()
@@ -28,15 +28,27 @@ export class SessionService {
                 operations.push(this.cloudinaryService.uploadFile(file))
             }
 
+            const sessionDoc = new this.sessionModel({...data,userId});
+            const sessionData: SessionDocument = (await sessionDoc.save()).toObject();
+
             // first upload the files on cloudinary
             const cloudinaryFileLinks = await Promise.all(operations);
             if(cloudinaryFileLinks.length){
                 data.context[Contexts.PDF_FILES] = cloudinaryFileLinks.filter((f: {fileType: FileTypes, link: string})=>
                     f.fileType === FileTypes.PDF_FILES).map(v=>v.link);
             }
-            const sessionDoc = new this.sessionModel({...data,userId});
-            const sessionData: SessionDocument = (await sessionDoc.save()).toObject();
+
             operations = [];
+            
+            // if context has website links, then scrap the website content
+            if(data.context[Contexts.WEBSITE_LINKS]?.length){
+                const res: ScrapedContent[]= [];
+                for(const link of data.context[Contexts.WEBSITE_LINKS]){
+                    const content = await scrapeWebsite(link, {maxDepth:1});
+                    res.push(...content);
+                }
+                operations.push(this.langchainService.uploadTextInQdrant(res, userId, sessionData._id as string));
+            }
             for(let idx = 0; idx < cloudinaryFileLinks.length; idx++){
                 operations.push(this.langchainService.uploadFileInQdrantStore(`uploads/${files[idx].filename}`, userId, sessionData._id as string))
             }

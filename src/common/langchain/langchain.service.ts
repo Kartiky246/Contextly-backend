@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { DocxLoader } from "@langchain/community/document_loaders/fs/docx";
-// import { TextLoader } from "@langchain/community/document_loaders/fs/text";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { QdrantVectorStore } from "@langchain/qdrant";
 import { ConfigService } from '@nestjs/config';
@@ -12,6 +11,8 @@ import { OpenAiModel, OpenaiService } from '../openAi/openai/openai.service';
 import path from 'path';
 import { QdrantInitService } from 'src/qdrant/qdrant.service';
 import { ChatRole } from 'src/chat/chat.schema';
+import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
+import { ScrapedContent } from 'src/utils/web-scrapping/web-scrapping-cheerio';
 
 
 interface Where {
@@ -64,6 +65,42 @@ export class LangchainService {
 
         fs.unlinkSync(filePath);
     };
+
+    uploadTextInQdrant = async (content: ScrapedContent[], userId: string, sessionId: string) => {
+
+        const text = content.map((content)=>{
+            return `
+            ${content.title}
+            ${content.content}
+            `
+        })
+        const metaData = content.map((content) => ({
+            metadata: {
+                userId,
+                sessionId,
+                url: content.url,
+                title: content.title
+            },
+        }));
+        console.log(text[3]);
+        return await QdrantVectorStore.fromTexts(text, metaData, this.openAiService.embedding, {
+            url: this.configService.get<string>("QDRANT_DB_URL"),
+            collectionName: "session",
+            apiKey: this.configService.get<string>("QDRANT_DB_API_KEY"),
+        })
+    }
+
+    getWebsiteContent = async (url: string) => {
+        const loaderWithSelector = new CheerioWebBaseLoader(
+            url,
+            {
+                selector: "h1, h2, h3, h4, h5, h6, p, article, section, main, div, blockquote, li"
+            }
+          );
+          
+          const docsWithSelector = await loaderWithSelector.load();          
+          return {content: docsWithSelector[0].pageContent, url}
+    }
 
     getContext = async (
         message: string,

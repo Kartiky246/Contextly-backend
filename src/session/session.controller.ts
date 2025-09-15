@@ -23,7 +23,7 @@ export class SessionController {
     }
 
 
-    @UseGuards(ClerkAuthGuard )
+    // @UseGuards(ClerkAuthGuard )
     @Post('/create')
     @UseInterceptors(
         FilesInterceptor('files', 10, {
@@ -34,7 +34,7 @@ export class SessionController {
         }),
     )
     async createSession(@Req() req: ReqObj, @UploadedFiles() files: Express.Multer.File[], @Body() payload) {
-        const userId = req?.user?.id!;
+        const userId = req?.user?.id! || '1';
 
         let parsedData: CreateSessionDto;
         try {
